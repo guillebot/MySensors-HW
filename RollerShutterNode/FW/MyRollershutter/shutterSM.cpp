@@ -105,8 +105,8 @@ void ShutterProcessing() {
   
   if (_shutterSM.oldPosition != _shutterSM.currentPosition) _shutterSM.oldPosition = _shutterSM.currentPosition;
   
-  if (_shutterSM.currentPosition < _shutterSM.positionRequested) shutterSwitchSM(shUp);
-  else if (_shutterSM.currentPosition>_shutterSM.positionRequested) shutterSwitchSM(shDown);
+  if (_shutterSM.currentPosition < _shutterSM.positionRequested) shutterSwitchSM(shDown);
+  else if (_shutterSM.currentPosition>_shutterSM.positionRequested) shutterSwitchSM(shUp);
 
 }
 /* ======================================================================
@@ -138,7 +138,7 @@ void ShutterUp() {
   // Power ON motor 
   digitalWrite(_powerPin, RELAY_ON);      
 
-  _shutterSM.currentPosition=_shutterSM.oldPosition+(shutterTimeInState()*100/_shutterSM.upTimeRef);
+  _shutterSM.currentPosition=_shutterSM.oldPosition-(shutterTimeInState()*100/_shutterSM.upTimeRef);
   
   // targetting % Up
   if (shutterTimeInState() > _shutterSM.travelTime) {
@@ -154,7 +154,8 @@ void ShutterUp() {
   if ( shutterTimeInState() > (_shutterSM.upTimeRef + TRAVELTIME_ERRORMS) && _shutterSM.positionRequested<100 ) {
     // error++ // we have a timeout : position requested was <100% but motor current shutdown has not been detected!
     // we send error info, and ask for a calibration as we don't know where we are !!!
-    _shutterSM.currentPosition=100; // we suppose we are at 100%
+  //  _shutterSM.currentPosition=100; // we suppose we are at 100%
+    _shutterSM.currentPosition=0; // we suppose we are at 0% persiana totalmente abierta
     shutterSwitchSM(shStop);   
   }
   
@@ -166,7 +167,7 @@ Comments:
 ====================================================================== */
 void ShutterDownTransition() {
 
-  _shutterSM.travelTime = (_shutterSM.downTimeRef/100)*(_shutterSM.currentPosition-_shutterSM.positionRequested);
+  _shutterSM.travelTime = (_shutterSM.downTimeRef/100)*(abs((_shutterSM.currentPosition-_shutterSM.positionRequested)));
       
   #ifdef MY_DEBUG_SKETCH
   Serial.print(F("SHUTTER: DOWN:"));
@@ -182,13 +183,13 @@ Purpose : State : Processing Down command
 Comments: 
 ====================================================================== */
 void ShutterDown() {  
-   
+
   // 0=RELAY_UP, 1= RELAY_DOWN
   digitalWrite(_directionPin, RELAY_DOWN);
   // Power ON motor 
   digitalWrite(_powerPin, RELAY_ON);  
 
-  _shutterSM.currentPosition = _shutterSM.oldPosition-(shutterTimeInState()*100/_shutterSM.downTimeRef);
+  _shutterSM.currentPosition = _shutterSM.oldPosition+(shutterTimeInState()*100/_shutterSM.downTimeRef);
 
   // targetting % Down
   if (shutterTimeInState() > _shutterSM.travelTime) {
@@ -204,7 +205,8 @@ void ShutterDown() {
   if ( shutterTimeInState() > (_shutterSM.downTimeRef + TRAVELTIME_ERRORMS) && _shutterSM.positionRequested<100 ) {
     // error++ // we have a timeout : position requested was <100% but motor current shutdown has not been detected!
     // todo : send error info, and ask for a calibration as we don't know where we are !!!
-    _shutterSM.currentPosition=0; // we suppose we are at 0% 
+//    _shutterSM.currentPosition=0; // we suppose we are at 0% 
+    _shutterSM.currentPosition=100; // we suppose we are at 100% persiana totalmente cerrada
     shutterSwitchSM(shStop);   
   }
   
@@ -448,5 +450,3 @@ uint16_t readEeprom(uint16_t pos) {
     return (hiByte | loByte);
     
 }
-
-

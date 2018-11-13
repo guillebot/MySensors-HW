@@ -7,6 +7,9 @@
 #ifndef shutterSM_h
 #define shutterSM_h
 
+
+#define MY_DEBUG_SKETCH
+
 // ********************* PIN/RELAYS DEFINES *******************************************
 #define SHUTTER_UPDOWN_PIN        19                    // Default pin for relay SPDT, you can change it with : initShutter(SHUTTER_POWER_PIN, SHUTTER_UPDOWN_PIN)
 #define SHUTTER_POWER_PIN         18                    // Default pin for relay SPST : Normally open, power off rollershutter motor

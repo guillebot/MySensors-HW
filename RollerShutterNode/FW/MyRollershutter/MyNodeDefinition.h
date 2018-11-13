@@ -11,19 +11,15 @@
 /* *******************************************************************************************************************
  *                                          MYSENSORS 
  * ******************************************************************************************************************/
-#define MY_BAUD_RATE      38400
-//#define MY_NODE_ID        10
+#define MY_BAUD_RATE      115200
+#define MY_NODE_ID        12
 
-// Enable and select radio type attached
-#define MY_RADIO_RFM69          // Enable RFM69 radio
-#define MY_RFM69_FREQUENCY   RF69_868MHZ
-#define MY_RF69_IRQ_PIN 2     // Set Irq pin of the radio
-#define MY_RF69_SPI_CS 10     // Set SPI CSN pin of the radio
+#define MY_RADIO_NRF24
+#define MY_RF24_CHANNEL 110
+// En todos los nodos que van con line power activo repeater
+#define MY_REPEATER_FEATURE
 
-#define MY_RFM69_ENABLE_ATC     // Uncomment to enable Automatic Transmission Control
-#define MY_RFM69_ATC_LEVEL 70   // Uncomment and set RSSI target for ATC mode. Not mandatory for GW
-//#define MY_RFM69_LISTENMODE   // Uncomment to enable ListenMode (RX duty cycle communication for sleeping node)
-
+// Ver luego si se puede subir la potencia, cambiar de canal, etc.
 
 //#define MY_NODE_LOCK_FEATURE //!< Enable lockdown of node if suspicious activity is detected
 
@@ -86,17 +82,18 @@
 // ********************* TEMPERATURE DEFINES *****************************************
 #define TEMPERATURE_NUMSAMPLES    5                   // how many samples
 
-#define TEMPERATURE_ALARM         60                  // temperature threshold for alarm
+#define TEMPERATURE_ALARM         45                  // temperature threshold for alarm
 
-#define TEMP_MEASURE_INTERVAL     3000                // How many milli seconds between each measurement
+#define TEMP_MEASURE_INTERVAL     10000                // How many milli seconds between each measurement
+
+// no encuentro en ningun lado esto. O sea nunca manda toda la info cada 30 segundos.
 #define FORCE_TRANSMIT_INTERVAL   30                  // number of seconds, the sensor is forced to report all values to the controller
-#define TEMP_TRANSMIT_THRESHOLD   2                   // how much the temperature should have changed since last time it was transmitted. 
+#define TEMP_TRANSMIT_THRESHOLD   0.1                   // how much the temperature should have changed since last time it was transmitted. 
 
 // ********************* BUTTONS STATES **********************************************
 #define BT_PRESS_NONE             0                   // 
 #define BT_PRESS_UP               1                   // 
 #define BT_PRESS_DOWN             2                   // 
 #define BT_PRESS_STOP             4                   // 
-
 
 #endif

@@ -51,6 +51,7 @@ TODO LIST :
 #include <Bounce2.h>
 #include <OneWire.h>
 
+#define MY_DEBUG_SKETCH
 
 // Define various ADC prescaler
 const unsigned char PS_16   = (1 << ADPS2);
@@ -88,9 +89,8 @@ MyMessage msgCurrent(CHILD_ID_CURRENT,V_WATT);                        // Current
 MyMessage msgPercent(CHILD_ID_PERCENT,V_DIMMER);                      // should be deprecated in favor of V_PERCENTAGE; COVER type in mysensors already has V_PERCENTAGE. but unfortunately jeedom controller is not up to date yet..
 
 boolean   isMetric                = true;
-
 uint8_t   errorCode               = 0;                                // Node Error code, check table
-
+uint8_t   newpos;
 /* ======================================================================
 Function: before()
 Purpose : before Mysensors init
@@ -142,7 +142,6 @@ void presentation()  {
   present(CHILD_ID_CURRENT, S_POWER);           // V_WATT
   present(CHILD_ID_PERCENT, S_DIMMER);          // V_DIMMER, deprecated, replace V_PERCENTAGE in jeedom controller for the moment..
 
-  isMetric = getConfig().isMetric;
   #ifdef MY_DEBUG_SKETCH 
   Serial.print(F("isMetric: ")); 
   Serial.println(isMetric);  
@@ -157,7 +156,7 @@ Comments:
 void setup() { 
  
   initDS18x20();  // init hilink temperature monitoring
-    
+  
   initShutter(RELAY_POWER, RELAY_UPDOWN);  // init Roller Shutter State Machine
    
   digitalWrite(DEBUG_LED, LOW); 
@@ -179,11 +178,11 @@ void loop() {
   buttonPressed = processButtons(); 
   switch (buttonPressed) {
     case BT_PRESS_UP:
-      setPosition(100);
+      setPosition(0);
       send(msgUp.set(1), 1);     
       break;
     case BT_PRESS_DOWN:
-      setPosition(0);
+      setPosition(100);
       send(msgDown.set(1), 1);      
       break;
     case BT_PRESS_STOP:
@@ -212,12 +211,15 @@ void loop() {
   shutterUpdateSM();   
   // Led ON when relay is on
   if  (digitalRead(RELAY_POWER)==RELAY_ON) digitalWrite(DEBUG_LED, HIGH); else digitalWrite(DEBUG_LED, LOW);
-  // todo send % progression for controller widgets NOT TESTED  
-//  static uint8_t oldpos=getPosition();
-//  if (abs(oldpos-getPosition())>10 && getCalibrationState()==0) { 
-//    send(msgShutterPosition.set(getPosition()));
-//    send(msgPercent.set(getPosition()));
-//  } 
+  
+  // send % progression for controller widgets  
+  static uint8_t oldpos=getPosition();
+  newpos=getPosition();
+  if (abs(oldpos-newpos)>0 && getCalibrationState()==0) { 
+    send(msgShutterPosition.set(newpos));
+    //send(msgPercent.set(newpos));
+    oldpos=newpos;
+  } 
 
   // Read temperature sensor
   bool tx = false;
@@ -229,7 +231,9 @@ void loop() {
     ShutterStop(); 
   } 
   oldTemperature = hilinkTemperature;
-  if (tx) send(msgTemperature.set((uint8_t)hilinkTemperature), 1);  // TODO problem sending float to jeedom???weird..need to check  
+// original modificad por guille    if (tx) send(msgTemperature.set((uint8_t)hilinkTemperature), 1);  // TODO problem sending float to jeedom???weird..need to check  
+
+  if (tx) send(msgTemperature.set(hilinkTemperature,2), 1);  // TODO problem sending float to jeedom???weird..need to check  
 
 }
 /* ======================================================================
@@ -244,23 +248,23 @@ void receive(const MyMessage &message) {
     // Message received : Open shutters
     if (message.type == V_UP && message.sensor==CHILD_ID_ROLLERSHUTTER) {
       #ifdef MY_DEBUG_SKETCH 
-      Serial.println(F("CMD: Up")); 
+      Serial.println(F("CMD MQTT: Up")); 
       #endif 
-      setPosition(100);
+      setPosition(0);
     }  
        
     // Message received : Close shutters
     if (message.type == V_DOWN && message.sensor==CHILD_ID_ROLLERSHUTTER) {
       #ifdef MY_DEBUG_SKETCH 
-      Serial.println(F("CMD: Down")); 
+      Serial.println(F("CMD MQTT: Down")); 
       #endif 
-      setPosition(0);
+      setPosition(100);
     }
   
     // Message received : Stop shutters motor
     if (message.type == V_STOP && message.sensor==CHILD_ID_ROLLERSHUTTER) {
        #ifdef MY_DEBUG_SKETCH 
-       Serial.println(F("CMD: Stop")); 
+       Serial.println(F("CMD MQTT: Stop")); 
        #endif 
        ShutterStop(); 
      }     
@@ -270,21 +274,23 @@ void receive(const MyMessage &message) {
        if (message.getByte() > 100) setPosition(100); else setPosition(message.getByte());
   
        #ifdef MY_DEBUG_SKETCH 
-          Serial.print(F("CMD: Set position to ")); 
+          Serial.print(F("CMD PERCENTAJE: Set position to ")); 
           // Write some debug info               
           Serial.print(message.getByte());Serial.println(F("%")); 
        #endif     
-     } 
-    // Message received : Set position of Rollershutter 
-    if (message.type == V_DIMMER && message.sensor==CHILD_ID_PERCENT) {
-       if (message.getByte() > 100) setPosition(100); else setPosition(message.getByte());
-  
-       #ifdef MY_DEBUG_SKETCH 
-          Serial.print(F("CMD: Set position to ")); 
-          // Write some debug info               
-          Serial.print(message.getByte());Serial.println(F("%"));
-       #endif     
      }
+
+      // No uso dimmer, uso percentaje. Dimmer es para algo viejo.
+    // Message received : Set position of Rollershutter 
+    //if (message.type == V_DIMMER && message.sensor==CHILD_ID_PERCENT) {
+    //   if (message.getByte() > 100) setPosition(100); else setPosition(message.getByte());
+  
+     //  #ifdef MY_DEBUG_SKETCH 
+      //    Serial.print(F("CMD: Set position to ")); 
+          // Write some debug info               
+        //  Serial.print(message.getByte());Serial.println(F("%"));
+      // #endif     
+    // }
      
     // Message received : Calibration requested 
     if (message.type == V_STATUS && message.sensor==CHILD_ID_AUTOCALIBRATION) {
@@ -491,4 +497,3 @@ void temperatureProcess() {
     }    
   }
 }
-
