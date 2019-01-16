@@ -6,8 +6,8 @@ As I haven't been able to contact him, I'm putting here some small modifications
 
 My setup is:
 
-OpenHAB (2.4)
-MQTT (mosquitto)
-Mysensors (2.3.1)
+* OpenHAB (2.4)
+* MQTT (mosquitto)
+* Mysensors (2.3.1) with nRF24 radios.
 
 
